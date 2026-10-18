@@ -1,127 +1,77 @@
-# Проверки WatchLock
+# WatchLock verification
 
-Дата: 2026-10-12. Среда: macOS 26.6.2 (25G83), arm64, Swift 6.4,
-Command Line Tools (`/Library/Developer/CommandLineTools`), **без полного Xcode**.
-Цель binary: arm64-apple-macos14.0. Нет проверки исполнения на macOS 14.
+**English** · [Русский](VERIFICATION.ru.md)
 
-## Автоматические результаты
+Date: 2026-10-12. Environment: macOS 26.6.2 (25G83), arm64, Swift 6.4, Command Line Tools (`/Library/Developer/CommandLineTools`), **without full Xcode**. Binary target: arm64-apple-macos14.0. Execution on macOS 14 was not tested.
 
-| Статус | Проверка | Доказательство |
+## Automated results
+
+| Status | Check | Evidence |
 | --- | --- | --- |
-| PASS | Основа форка | fetched `upstream-1.12.2` → `c33a132f9b65ecd8fd55954a5e097a77b86c8a92`; Git-история сохранена, upstream app не запускался |
-| PASS | RED → GREEN ядра | Configuration/MonitoringEngine/RadioPolicy/LockVerification/Calibration: отсутствующие types до реализации → 27 deterministic tests в 5 suites |
-| PASS | Full core suite | `./scripts/test-core.sh`; Swift Testing, 29 tests, без sleep/реального радио/lock |
-| PASS | Координатор и storage | app executable `--self-check`: временный suite, неудачная validation/load сохраняет raw Data; corrupt coordinator не перезаписывает данные; основной/вторичный UUID, sleep/calibration/pause, fake lock failure, radio-stop-before-lock, timer cleanup; ручной поиск/«Возобновить» перечитывают сеанс; единственный owned ticker остаётся после confirmed lock и замечает fake unlock без notification |
-| PASS | Private-state parser | `--self-check`: Boolean/0/1; отсутствующий flag в полном активном сеансе → unlocked, но не подтверждает lock; некорректный присутствующий flag, nil-словарь, inactive/incomplete session → unknown; явный `1` подтверждает lock |
-| PASS | Login presentation | `--self-check`: fake statuses enabled/notRegistered/requiresApproval/notFound/error, без регистрации в macOS |
+| PASS | Fork basis | fetched `upstream-1.12.2` → `c33a132f9b65ecd8fd55954a5e097a77b86c8a92`; history was retained during the initial import; the upstream app was not run. Public `master` starts from root snapshot commit `a68877c` and does not include upstream Git history; the complete upstream history exists only in local `codex/watchlock-history` |
+| PASS | Core RED → GREEN | Configuration/MonitoringEngine/RadioPolicy/LockVerification/Calibration: missing types before implementation → 27 deterministic tests in 5 suites |
+| PASS | Full core suite | `./scripts/test-core.sh`; Swift Testing, 29 tests, without sleep/real radio/locking |
+| PASS | Coordinator and storage | app executable `--self-check`: temporary suite; failed validation/load preserves raw Data; a corrupt coordinator does not overwrite data; primary/secondary UUID, sleep/calibration/pause, fake lock failure, radio-stop-before-lock, timer cleanup; manual scan/“Возобновить” (Resume) reread session state; the single owned ticker remains after confirmed lock and notices fake unlock without a notification |
+| PASS | Private-state parser | `--self-check`: Boolean/0/1; missing flag in a complete active session → unlocked, but does not confirm lock; malformed present flag, nil dictionary, inactive/incomplete session → unknown; explicit `1` confirms lock |
+| PASS | Login presentation | `--self-check`: fake statuses enabled/notRegistered/requiresApproval/notFound/error, with no macOS registration |
 | PASS | Metadata/shell syntax | `bash -n scripts/build-local.sh`; `plutil -lint` Info.plist, entitlements, project.pbxproj |
-| PASS | Локальный .app | `./scripts/build-local.sh`; executable существует, bundle id/14.0/arm64 assertions; не запускает приложение |
-| PASS | Подпись | `codesign --verify --strict --verbose=2 build/WatchLock.app`: valid on disk / satisfies Designated Requirement; `codesign -dv`: adhoc,runtime, TeamIdentifier not set |
-| PASS | Аудитор | `python3 scripts/verify-safety.py --self-test` сначала RED на запрещённом fixture, затем PASS; реальный audit PASS |
-| PASS | Ограниченный static/binary audit | app sources, direct undefined `nm -u` symbols, отсутствие старых функций/Launcher/XIB/private linkage, пустые signed entitlements, bundle contents, Xcode/CLI source parity |
+| PASS | Local .app | `./scripts/build-local.sh`; executable exists, bundle ID/14.0/arm64 assertions; does not launch the app |
+| PASS | Signing | `codesign --verify --strict --verbose=2 build/WatchLock.app`: valid on disk / satisfies Designated Requirement; `codesign -dv`: adhoc,runtime, TeamIdentifier not set |
+| PASS | Auditor | `python3 scripts/verify-safety.py --self-test` first RED on a prohibited fixture, then PASS; real audit PASS |
+| PASS | Limited static/binary audit | app sources, direct undefined `nm -u` symbols, absence of old functions/Launcher/XIB/private linkage, empty signed entitlements, bundle contents, Xcode/CLI source parity |
 | PASS | Diff whitespace | `git diff --check` |
-| NOT RUN | `xcodebuild` | требует полный Xcode; plist parse/source parity **не** заменяют Xcode build |
-| PARTIAL | GUI layout / keyboard / VoiceOver | Пользователь показал скриншоты установленной предыдущей сборки: сначала поиск заблокирован при «неизвестном» сеансе, затем после блокировки и возврата UI оставался locked/suspended. Новая сборка в GUI не проверялась; keyboard/VoiceOver не проверены. Компиляция UI не считается rendered inspection |
-| PARTIAL | Реальная блокировка | Пользователь сообщил о разблокировке и показал предыдущую сборку с confirmed weakSignal attempt. Это не собственный аппаратный тест; в автоматических проверках `SACLockScreenImmediate` не вызывается, новая сборка в реальном lock/unlock не проверена |
-| NOT RUN | Apple Watch / мышь / клавиатура | реальный CBCentralManager не создавался тестами; реальная совместимость/потребление радио неизвестны |
-| NOT RUN | Native Auto Unlock | не проверен; приложение не реализует unlock и не меняет системные настройки |
-| PARTIAL | Bluetooth TCC / Login Item approval | Пользователь включил автозапуск в установленной предыдущей сборке; системный статус/повторный вход не проверены. Автотесты не вызывают реальные TCC/SMAppService.register |
-| NOT RUN | Developer ID / нотарификация / Gatekeeper acceptance | учётная запись не использована; только local ad-hoc; codesign verify не означает нотарификацию |
+| NOT RUN | `xcodebuild` | requires full Xcode; plist parsing/source parity **do not** replace an Xcode build |
+| PARTIAL | GUI layout / keyboard / VoiceOver | The user showed screenshots of an installed previous build: at first, scanning was blocked in an “неизвестном” (unknown) session; then after locking and returning, the UI remained locked/suspended. The new build was not checked in the GUI; keyboard/VoiceOver were not checked. UI compilation is not rendered inspection |
+| PARTIAL | Real lock | The user reported unlocking and showed a previous build with a confirmed weakSignal attempt. This is not our own hardware test; automated checks do not call `SACLockScreenImmediate`; the new build was not checked with real lock/unlock |
+| NOT RUN | Apple Watch / mouse / keyboard | tests did not create a real CBCentralManager; real compatibility/radio consumption are unknown |
+| NOT RUN | Native Auto Unlock | not checked; the app does not implement unlock or change system settings |
+| PARTIAL | Bluetooth TCC / Login Item approval | The user enabled launch at login in the installed previous build; system status/subsequent login were not checked. Automated tests do not call real TCC/SMAppService.register |
+| NOT RUN | Developer ID / notarization / Gatekeeper acceptance | account not used; only local ad-hoc; codesign verification does not mean notarization |
 
-Ранняя read-only CLI-проба CGSessionCopyCurrentDictionary **в sandbox** дала
-`sessionAvailable=false`. Отдельная read-only проба **без sandbox** на том же Mac
-вернула словарь: private `CGSSessionScreenIsLocked` отсутствует, on-console=1,
-login-done=1. Ни одна из проб не является проверкой GUI-приложения. Пользовательский
-скриншот предыдущей сборки показал «неизвестный» сеанс и заблокированный поиск;
-исправленная сборка в `/Applications` не установлена и её GUI-поведение не проверено.
+An early read-only CLI probe of CGSessionCopyCurrentDictionary **inside a sandbox** returned `sessionAvailable=false`. A separate read-only probe **outside the sandbox** on the same Mac returned a dictionary: private `CGSSessionScreenIsLocked` was absent, on-console=1, login-done=1. Neither probe tested the GUI app. A user screenshot of the previous build showed an “неизвестный” (unknown) session and blocked scanning; the corrected build was not installed in `/Applications`, and its GUI behavior was not tested.
 
-После согласования изменения добавлена регрессия: self-check со старым адаптером
-завершился ошибкой `active session without private flag`; после исправления self-check,
-27 core tests, сборка, аудит и codesign прошли. Независимая read-only CLI-проба,
-скомпилированная с исправленным `ScreenLockAdapter.swift`, дала
-`sessionAvailable=true`, `lockFlagPresent=false`, `parsedState=unlocked`,
-`adapterState=unlocked`. Она не создаёт GUI/Bluetooth и не вызывает блокировку;
-это проверка адаптера на текущих данных macOS, **не** аппаратный тест приложения.
-Хеш executable установленной предыдущей копии до/после работ совпал — она не заменялась.
+After the change was agreed, a regression was added: self-check with the old adapter failed with `active session without private flag`; after the fix, self-check, 27 core tests, build, audit, and codesign passed. An independent read-only CLI probe compiled with the corrected `ScreenLockAdapter.swift` returned `sessionAvailable=true`, `lockFlagPresent=false`, `parsedState=unlocked`, `adapterState=unlocked`. It creates no GUI/Bluetooth and does not invoke locking; it checks the adapter against current macOS data, **not** app hardware behavior. The executable hash of the previously installed copy matched before and after work; it was not replaced.
 
-## Дополнение 2026-10-13: опрос после блокировки
+## 2026-10-13 addendum: polling after locking
 
-Пользователь сообщил и показал скриншот: мониторинг включён, основные Watch выбраны,
-попытка weakSignal отмечена как подтверждённая, но после штатного возврата UI
-оставался locked/suspended. Это пользовательское свидетельство, **не** собственная
-проверка реального lock/unlock. Read-only проба системного источника сеанса
-после возврата дала словарь без private flag, но on-console=1/login-done=1 и
-`adapterState=unlocked`. Ранее `MonitoringEngine.needsTick` становился false после
-confirmed lock, из-за чего `AppDelegate.refresh` удалял единственный таймер. Если
-private unlock notification отсутствовал или пришёл до реальной смены состояния,
-следующей перепроверки не происходило. Действия «Возобновить» и открытие настроек
-также опирались на кешированное состояние.
+The user reported and showed a screenshot: monitoring enabled, primary Watch selected, weakSignal attempt marked confirmed, yet after normal return the UI remained locked/suspended. This is user evidence, **not** our own verification of real lock/unlock. A read-only probe of the system session source after returning produced a dictionary without the private flag but with on-console=1/login-done=1 and `adapterState=unlocked`. Previously `MonitoringEngine.needsTick` became false after confirmed lock, causing `AppDelegate.refresh` to remove the sole timer. If a private unlock notification was absent or arrived before the real state transition, no later recheck occurred. “Возобновить” (Resume) and opening settings also relied on cached state.
 
-Регрессии добавлены **до** исправления: `./scripts/test-core.sh` завершился с 5
-ошибками ожиданий в 2 новых тестах (enabled locked/unknown, confirmed lock/fault
-требуют polling); после успешной сборки `--self-check` завершился с
-`confirmed lock retains session ticker`. Затем изменены только lifecycle existing
-ticker и свежая проверка сеанса перед Resume/Settings. После изменения — **29/29**
-core tests, build и self-check PASS; fake confirmed lock сохраняет тот же таймер,
-locked poll не запускает радио/повторный lock, fake unlock без notification создаёт
-новую эпоху без старых измерений, дубли unlocked poll не продлевают acquisition,
-сон удаляет таймер, fault не очищается автоматически. GUI-приложение, реальный
-Bluetooth и блокировка не запускались; установленная `/Applications` копия не
-заменялась. Аппаратная проверка новой сборки остаётся **NOT RUN**.
+Regressions were added **before** the fix: `./scripts/test-core.sh` failed with 5 expectation errors in 2 new tests (enabled locked/unknown and confirmed lock/fault require polling); after a successful build, `--self-check` failed with `confirmed lock retains session ticker`. Then only the existing ticker lifecycle and a fresh session check before Resume/Settings were changed. Afterward, **29/29** core tests, build, and self-check PASS; fake confirmed lock retains the same timer, locked polling starts neither radio nor another lock, fake unlock without notification starts a new epoch without stale measurements, duplicate unlocked polls do not extend acquisition, sleep removes the timer, and a fault is not cleared automatically. The GUI app, real Bluetooth, and locking were not run; the installed `/Applications` copy was not replaced. Hardware verification of the new build remains **NOT RUN**.
 
-## Ручной аппаратный чек-лист
+## Manual hardware checklist
 
-**Сначала сохраните работу: следующий тест действительно может заблокировать Mac.**
-Убедитесь, что знаете штатный способ аутентификации. Не включайте BLEUnlock одновременно.
-Пункты ниже пока **NOT RUN**, отмечать PASS только после реального наблюдения:
+**Save your work first: the next test can really lock the Mac.** Make sure you know a normal way to authenticate. Do not run BLEUnlock simultaneously. Items below are still **NOT RUN**; mark PASS only after direct observation:
 
-- [ ] Открыть .app; все строки/кнопки видимы, Tab/VoiceOver, отмена удаления без изменений.
-- [ ] Разрешить Bluetooth без Accessibility/FDA/root; до выбора/включения нет блокировки.
-- [ ] Поиск прекращается@20 с / stop; объявления не вызывают массовые соединения.
-- [ ] Основные Apple Watch обнаруживаются и действительно дают connected RSSI каждые ~2 с.
-- [ ] При подключении automatic general scan остановлен; recovery: known first, 5/25 duty cycle.
-- [ ] Калибровка даёт 20+20 samples / 90 с, плохое разделение выдаёт ошибку, apply только явно.
-- [ ] Уход требует настоящей аутентификации macOS (не просто display sleep / screensaver).
-- [ ] Вернуться; штатный пароль/Touch ID/Apple Watch Auto Unlock работают без вмешательства app.
-- [ ] После штатной разблокировки сеанс обновляется и мониторинг возобновляется без ручного «Возобновить», с новыми измерениями.
-- [ ] Оставить вторичный iPhone на столе — он не препятствует блокировке от ухода с Watch.
-- [ ] Bluetooth мышь/клавиатура работают во время поиска, RSSI и recovery.
-- [ ] Bluetooth off / permission revoke после active → одна попытка с причиной, не loop.
-- [ ] Startup refusal / unknown lock state → suspension/error, не loop.
-- [ ] Сон/wake clears stale samples, не продлевает grace дубликатами; locked state не запускает radio.
-- [ ] Пауза 15/30/60 переживает сон/lock; expiry при locked не запускает radio.
-- [ ] Смена A → B → A, late callbacks, quit: нет старого присутствия/owned timers/scans.
-- [ ] Login item фактически enabled/approval/error после изменения; стабильный путь .app.
-- [ ] Повторить на целевой версии macOS 14+; private API/flag могут отсутствовать.
+- [ ] Open .app; all text/buttons visible, Tab/VoiceOver, cancel removal without changes.
+- [ ] Allow Bluetooth without Accessibility/FDA/root; no lock before selection/enabling.
+- [ ] Scanning stops at 20 s / stop; advertisements do not trigger mass connections.
+- [ ] Primary Apple Watch is found and really provides connected RSSI about every 2 s.
+- [ ] Automatic general scan stops on connection; recovery: known first, 5/25 duty cycle.
+- [ ] Calibration gathers 20+20 samples / 90 s; poor separation reports an error; apply only explicitly.
+- [ ] Moving away requires real macOS authentication (not just display sleep / screensaver).
+- [ ] Return; normal password/Touch ID/Apple Watch Auto Unlock work without app interference.
+- [ ] After normal unlock, session updates and monitoring resumes without manual “Возобновить” (Resume), with new measurements.
+- [ ] Leave a secondary iPhone on the desk — it does not prevent locking when the Watch moves away.
+- [ ] Bluetooth mouse/keyboard work during scanning, RSSI, and recovery.
+- [ ] Bluetooth off / permission revoked after active → one attempt with a reason, not a loop.
+- [ ] Startup refusal / unknown lock state → suspension/error, not a loop.
+- [ ] Sleep/wake clears stale samples and does not extend grace through duplicates; locked state does not start radio.
+- [ ] A 15/30/60-minute pause survives sleep/lock; expiry while locked does not start radio.
+- [ ] A → B → A change, late callbacks, quit: no stale presence/owned timers/scans.
+- [ ] Login item actually shows enabled/approval/error after changes; stable .app path.
+- [ ] Repeat on target macOS 14+; private API/flag may be absent.
 
-## Материальные риски
+## Material risks
 
-Private ABI/state flags не гарантируются Apple; GUI/API и Apple Watch ещё не проверены.
-RSSI/UUID не являются аутентификацией, точными метрами или признаком ношения часов.
-Положение тела/помехи могут давать ложные блокировки, а отсутствие стабильного BLE
-соединения — постоянные noSignal. При ошибке lock приложение остановит автоматику
-до явного resume и **не обещает защищённый экран**. Для гарантий используйте штатные
-правила блокировки macOS, независимо от WatchLock.
+Private ABI/state flags are not guaranteed by Apple; GUI/API and Apple Watch remain unverified. RSSI/UUID are not authentication, precise meters, or proof that the watch is worn. Body position/interference may cause false locks; an unstable BLE connection may produce persistent noSignal. On a lock error the app stops automation until explicit Resume and **does not promise a secured screen**. For guarantees, use native macOS lock policies independently of WatchLock.
 
-## Процесс
+## Process
 
-Локальная ветка `codex/watchlock`. Ничего не push/publish/deploy; пользователь сам
-поместил предыдущую сборку в `/Applications`, а новый `build/WatchLock.app` туда не
-копировался. Полный MIT/NOTICE сохранены; внешние изображения удалены. Независимое
-финальное ревью выполнено gpt-6-sol (high, fresh/read-only), без вложенных агентов.
-Reviewer повторил 19 исходных тестов/self-check/audit; критических уязвимостей не выявил,
-но нашёл четыре Important дефекта. Они исправлены одним test-backed проходом:
+At the time of this verification, work was on local branch `codex/watchlock` and nothing had been pushed/published/deployed; the user placed a previous build in `/Applications`, while the new `build/WatchLock.app` was not copied there. Full MIT/NOTICE retained; external images removed. Independent final review by gpt-6-sol (high, fresh/read-only), without nested agents. The reviewer reran 19 original tests/self-check/audit; no critical vulnerabilities were found, but four Important defects were identified. They were fixed in one test-backed pass:
 
-1. Startup unavailable теперь требует явного resume; pending initial state не считается
-   отказом. UI/координатор не включают режим при недоступном Bluetooth и не записывают его.
-2. Каждая активация получает фиксированные 15 с на первое измерение независимо от
-   noSignalTimeout; fresh RSSI завершает acquisition grace, включая wake.
-3. Established-link loss делает один known retry; ранняя failure → scan, последующая
-   scan-target failure / быстрый повторный обрыв → cooldown25, без бесконечного spin.
-4. Recovery объявления не передаются в UI; publish только в explicit discovery mode.
+1. Startup unavailability now requires explicit Resume; a pending initial state does not count as a refusal. UI/coordinator do not enable the mode or write it when Bluetooth is unavailable.
+2. Every activation gets a fixed 15 s for the first measurement regardless of noSignalTimeout; fresh RSSI ends acquisition grace, including after wake.
+3. Established-link loss makes one known retry; early failure → scan; subsequent scan-target failure / rapid repeat drop → cooldown25, without endless spin.
+4. Recovery advertisements are not passed to the UI; publish only in explicit discovery mode.
 
-Новые 8 core regression tests сначала RED (28 issues в 26 тестах; отдельный RED на
-отсутствующий discovery-mode accessor), затем **27/27 PASS**. Self-check дополнен
-отказом включения без Bluetooth без изменения storage и zero-return-but-unconfirmed
-coordinator failure без автоматического retry. Финальные build/self-check/audit/codesign
-повторены после исправлений. Повторное независимое ревью не запускалось.
+Eight new core regression tests were first RED (28 issues in 26 tests; separate RED for the missing discovery-mode accessor), then **27/27 PASS**. Self-check additionally covered refusal to enable without Bluetooth without changing storage and zero-return-but-unconfirmed coordinator failure without automatic retry. Final build/self-check/audit/codesign were repeated after fixes. A second independent review was not run.

@@ -1,55 +1,35 @@
 # WatchLock — BluetoothLocker
 
-Утилита для строки меню macOS: автоматически **блокирует, но не разблокирует** Mac,
-когда основное Bluetooth LE-устройство удаляется или перестаёт отвечать.
+**English** · [Русский](README.ru.md)
 
-## Коротко
+A macOS menu bar utility that automatically **locks, but never unlocks** your Mac when your primary Bluetooth LE device moves away or stops responding.
 
-- **Как работает:** подключается к выбранному BLE-устройству через CoreBluetooth,
-  измеряет RSSI и блокирует экран при длительном слабом сигнале или отсутствии
-  свежих измерений. Порог и задержки настраиваются; есть калибровка и пауза.
-- **Разрешения:** доступ к Bluetooth. Автозапуск — опционально через Login Items
-  macOS. Accessibility, Full Disk Access, пароль администратора и root не нужны.
-- **Данные:** UUID, имена устройств и настройки сохраняются локально в UserDefaults;
-  это не зашифрованное хранилище секретов. Нет аналитики, облака и сетевых обновлений.
-  Пароль Mac не запрашивается, Keychain не используется.
-- **Безопасность:** RSSI не доказывает личность или присутствие владельца; помехи
-  вызывают ложные срабатывания, а подмена/ретрансляция сигнала может мешать блокировке.
-  Это дополнительное удобство, не замена ручной блокировке и системным настройкам защиты.
-- **Ограничения:** блокировка использует закрытый API macOS, который может измениться.
-  Надёжность с Apple Watch и совместимость со штатным Auto Unlock требуют ручной проверки.
-  Локальная сборка подписана ad-hoc, без Developer ID и нотарификации.
-- **Лицензия:** [MIT](LICENSE), разрешающая использование, изменение и распространение
-  с сохранением уведомлений; происхождение и авторство — в [NOTICE](NOTICE).
+## At a glance
 
-## О проекте
+- **How it works:** connects to a selected BLE device through CoreBluetooth, measures RSSI, and locks the screen after a sustained weak signal or lack of fresh measurements. Thresholds and delays are configurable; calibration and pause are available.
+- **Permissions:** Bluetooth access. Optional launch at login through macOS Login Items. Accessibility, Full Disk Access, administrator password, and root are not required.
+- **Data:** device UUIDs, names, and settings are stored locally in UserDefaults; this is not encrypted secret storage. No analytics, cloud, or network updates. The app does not ask for your Mac password or use Keychain.
+- **Security:** RSSI does not prove the owner's identity or presence; interference can cause false locks, while signal spoofing or relaying can prevent a lock. This is a convenience feature, not a replacement for manual locking or macOS security settings.
+- **Limitations:** locking uses a private macOS API that may change. Reliability with Apple Watch and compatibility with built-in Auto Unlock need manual verification. The local build is ad-hoc signed, without Developer ID or notarization.
+- **License:** [MIT](LICENSE), allowing use, modification, and distribution while retaining notices; provenance and attribution are in [NOTICE](NOTICE).
 
-Персональный **lock-only** форк [BLEUnlock 1.12.2](https://github.com/ts1/BLEUnlock/tree/1.12.2),
-commit `c33a132f9b65ecd8fd55954a5e097a77b86c8a92`. MIT, © 2019–2022 Takeshi Sone.
-macOS **14+**, первая сборка **Apple Silicon / arm64**. Русское меню и настройки AppKit.
+## About the project
 
-**Собрано, но пока не подтверждено на реальных Apple Watch.** Результаты и ручной
-чек-лист — [docs/VERIFICATION.md](docs/VERIFICATION.md). Это не средство гарантированной
-защиты: RSSI не аутентифицирует владельца и может вызвать ложную блокировку.
+A personal **lock-only** fork of [BLEUnlock 1.12.2](https://github.com/ts1/BLEUnlock/tree/1.12.2), commit `c33a132f9b65ecd8fd55954a5e097a77b86c8a92`. MIT, © 2019–2022 Takeshi Sone. macOS **14+**; the first build targets **Apple Silicon / arm64**. AppKit menus and settings are in Russian.
 
-## Что изменено
+**Built, but not yet verified with actual Apple Watches.** Results and the manual checklist are in [docs/VERIFICATION.md](docs/VERIFICATION.md). This is not guaranteed protection: RSSI does not authenticate the owner and may cause false locks.
 
-- Удалены пароль, Keychain, имитация клавиатуры, разблокировка, Accessibility,
-  пользовательские скрипты, управление медиа, сетевые обновления, старый Launcher,
-  внутренние Bluetooth-базы и MAC-адреса. Старый upstream CI также удалён.
-- Несколько сохранённых CoreBluetooth UUID с именами/параметрами. **Только основное**
-  влияет на блокировку: iPhone на столе не удерживает Mac разблокированным.
-- Чистое ядро состояния/радиосроков/калибровки; единый владелец таймера.
-- Настоящая блокировка через изолированный закрытый адаптер; код 0 **не считается
-  успехом**, пока состояние экрана не подтверждено в пределах 3 секунд.
-- Нет сетевых зависимостей времени выполнения, аналитики, облака, сторонних пакетов,
-  Accessibility, Full Disk Access или root-helper. Приложение не разблокирует Mac.
+## What changed
 
-## Сборка
+- Removed passwords, Keychain, keyboard simulation, unlocking, Accessibility, user scripts, media control, network updates, the old Launcher, internal Bluetooth databases, and MAC addresses. The old upstream CI was also removed.
+- Supports multiple saved CoreBluetooth UUIDs with names/settings. **Only the primary device** affects locking: an iPhone left on the desk will not keep the Mac unlocked.
+- Pure state, radio-deadline, and calibration core; a single timer owner.
+- Real locking through an isolated private adapter; return code 0 **is not considered success** until the screen state is confirmed within 3 seconds.
+- No runtime network dependencies, analytics, cloud, third-party packages, Accessibility, Full Disk Access, or root helper. The app does not unlock the Mac.
 
-Нужны macOS, Command Line Tools / Xcode с `swiftc`, `codesign`; для тестов — современный
-Swift со штатным Swift Testing. Проверенная среда: CLT Swift 6.4, macOS 26.6.2, arm64.
-Сама программа компилируется в Swift language mode 5 с deployment target 14.0.
+## Build
+
+Requires macOS, Command Line Tools / Xcode with `swiftc` and `codesign`; tests require a modern Swift with standard Swift Testing. Verified environment: CLT Swift 6.4, macOS 26.6.2, arm64. The app itself compiles in Swift language mode 5 with deployment target 14.0.
 
 ```sh
 git clone https://github.com/DoctorTau/BluetoothLocker.git
@@ -62,149 +42,69 @@ python3 scripts/verify-safety.py
 codesign --verify --strict --verbose=2 build/WatchLock.app
 ```
 
-`test-core.sh` запускает `swift test` с локальными writable caches и без XCTest
-(его нет в установленных CLT), явно загружая штатные Testing macros при необходимости.
-Тесты не используют реальный Bluetooth/экранную блокировку. `--self-check` обрабатывается
-**до NSApplication/CBCentralManager** и использует отдельный временный UserDefaults suite.
-Не запускайте executable без флага для автоматической проверки.
+`test-core.sh` runs `swift test` with local writable caches and without XCTest (not present in the installed CLT), explicitly loading standard Testing macros when needed. Tests do not use actual Bluetooth or screen locking. `--self-check` is handled **before NSApplication/CBCentralManager** and uses a separate temporary UserDefaults suite. Do not run the executable without the flag for automated checks.
 
-При установленном **полном Xcode**:
+With **full Xcode** installed:
 
 ```sh
 xcodebuild -project WatchLock.xcodeproj -scheme WatchLock -configuration Debug \
   -derivedDataPath build/xcode CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= build
 ```
 
-В текущей среде этот путь **NOT RUN**; проверены plist/project syntax и равенство
-списков исходников Xcode/CLI, но не сам Xcode build. Проект не содержит чужой developer
-team, provisioning, private framework linkage или меняющего исходники build script.
+This route was **NOT RUN** in the current environment. Plist/project syntax and Xcode/CLI source-list parity were checked, but not the Xcode build itself. The project contains no third-party developer team, provisioning, private-framework linkage, or source-mutating build script.
 
-## Локальный запуск и установка
+## Run and install locally
 
-Готовый файл: `build/WatchLock.app` в каталоге репозитория.
-Скрипт только собирает его: **не запускает, не устанавливает и не блокирует Mac**.
+The built artifact is `build/WatchLock.app` in the repository. The script only builds it: it **does not launch or install the app or lock the Mac**.
 
-1. Сначала закройте BLEUnlock, чтобы старое приложение не влияло на тест.
-2. Откройте локальный `.app` в Finder (или `open build/WatchLock.app`). Появится
-   символ щита в строке меню, без обычного Dock-окна. Замок на щите означает
-   активный мониторинг; щит без замка — неактивное состояние.
-3. Разрешите Bluetooth стандартным диалогом macOS. Первоначальный отказ не запускает
-   цикл блокировок. Не предоставляйте дополнительные разрешения.
-4. После проверки можно вручную скопировать приложение в `/Applications` или
-   `~/Applications`. Для автозапуска используйте стабильное расположение, затем
-   переключатель в настройках WatchLock. Фактический статус/ошибка отображаются;
-   `requiresApproval` требует вашего согласия в настройках Login Items macOS.
+1. Quit BLEUnlock first so the old app cannot affect the test.
+2. Open the local `.app` in Finder (or run `open build/WatchLock.app`). A shield symbol appears in the menu bar, without a normal Dock window. A lock on the shield means monitoring is active; a shield without a lock means inactive.
+3. Allow Bluetooth through the standard macOS prompt. An initial denial does not start a lock loop. Do not grant additional permissions.
+4. After verifying it, you may manually copy the app into `/Applications` or `~/Applications`. For launch at login, use a stable location and then the switch in WatchLock settings. The actual status/error is shown; `requiresApproval` needs your consent in macOS Login Items settings.
 
-**Подпись: локальная ad-hoc + hardened runtime, без Developer ID. Нотарификации нет.**
-Проверка codesign не означает одобрение Gatekeeper. Если macOS блокирует загрузку,
-используйте только предусмотренное системой индивидуальное разрешение для доверенного
-локального файла. Не отключайте Gatekeeper глобально. Developer ID / нотарификация
-требуют собственной учётной записи и здесь не выполнялись.
+**Signing: local ad-hoc plus hardened runtime, without Developer ID. Not notarized.** A successful codesign check does not imply Gatekeeper approval. If macOS blocks launch, use only the system-provided per-file override for a trusted local file. Do not disable Gatekeeper globally. Developer ID and notarization require your own account and were not performed here.
 
-## Первичная настройка
+## Initial setup
 
-1. Мониторинг изначально **выключен**. Нажмите «Поиск 20 с», выберите объявление и
-   «Добавить». Поиск имеет кнопку остановки; соединения для чтения модели не создаются.
-2. Назовите устройство и нажмите «Сделать основным». Само добавление не выбирает
-   основное автоматически. Удаление основного выключает мониторинг; отмена удаления
-   ничего не меняет.
-3. **До включения сохраните работу: Mac может заблокироваться уже через 15 секунд**, если
-   часы не дают свежий connected RSSI. Часы могут не объявляться или не поддерживать
-   устойчивое соединение через эти API; наличие в списке не подтверждает пригодность.
-4. Включите мониторинг, убедитесь в подключении и свежих измерениях. Не запускайте
-   несколько копий WatchLock одновременно. Если сеанс обозначен «неизвестен», радио
-   и автомониторинг остановлены; такое поведение нельзя обходить обещанием «разблокировано».
+1. Monitoring is **off by default**. Click “Поиск 20 с” (Scan for 20 s), select an advertisement, and click “Добавить” (Add). Scanning has a stop button; it does not connect to read a device model.
+2. Name the device and click “Сделать основным” (Make primary). Adding a device does not automatically make it primary. Removing the primary turns monitoring off; canceling removal changes nothing.
+3. **Save your work before enabling it: the Mac may lock after only 15 seconds** if the watch supplies no fresh connected RSSI. A watch might not advertise or support a stable connection through these APIs; appearing in the list does not prove suitability.
+4. Enable monitoring and verify a connection and fresh measurements. Do not run multiple WatchLock instances at once. If the session is shown as “неизвестен” (unknown), radio and automatic monitoring are stopped; this must not be bypassed by assuming it is unlocked.
 
-Настройки хранятся только в отдельном UserDefaults-домене `local.shatravkada.WatchLock`.
-Нет миграции или чтения настроек/секретов BLEUnlock. Повреждённые данные не стираются:
-показывается ошибка, автоматический мониторинг выключен, запись заблокирована до
-ручного восстановления. Перед ручным сбросом сохраните исходные данные. `UserDefaults`
-не даёт обещания транзакционности или синхронного durable flush на диск.
+Settings are stored only in the separate UserDefaults domain `local.shatravkada.WatchLock`. BLEUnlock settings/secrets are neither read nor migrated. Corrupt data is not erased: an error is shown, automatic monitoring is disabled, and writes are blocked until manual recovery. Save the original data before a manual reset. `UserDefaults` does not promise transactions or a synchronous durable disk flush.
 
-Если ранее BLEUnlock сохранил пароль, WatchLock **не читает и не удаляет его**.
-При необходимости вручную откройте Keychain Access, найдите элемент BLEUnlock,
-проверьте принадлежность и удалите только его. Не удаляйте весь Keychain.
+If BLEUnlock previously stored a password, WatchLock **neither reads nor deletes it**. If needed, manually open Keychain Access, find the BLEUnlock item, verify its ownership, and delete only that item. Do not delete the whole Keychain.
 
-## Алгоритм и радио
+## Algorithm and radio
 
-- Default: порог **−75 dBm**, слабый сигнал **5 с**, отсутствие свежего сигнала **15 с**.
-  Диапазоны: −100…−30 dBm, 1…60 с, 5…300 с. Некорректные/нечисловые значения не применяются.
-- Среднее последних пяти ещё свежих RSSI; возврат из «далеко» требует порог + **5 dB**.
-  Начало подключения и advertisement не являются свежим присутствием.
-- RSSI запрашивается только по connected peripheral примерно раз в **2 с**, один
-  запрос одновременно. Ошибка не обновляет свежесть; зависший запрос ограничен 5 с.
-- После обрыва — одна немедленная known UUID / `retrievePeripherals` попытка до **5 с**; затем
-  общий scan **5 с**, пауза **25 с**. У API scan есть фильтр **service UUID**, не
-  peripheral UUID: используется nil scan, чужие объявления игнорируются локально.
-  После ранней ошибки known connect открывается scan; ошибка scan-target connect или
-  быстро оборвавшееся восстановленное соединение получает 25-секундную паузу, без spin.
-  Общее сканирование автоматически прекращается при подключении. Явный пользовательский
-  поиск может временно идти и при подключении; параллельных scans нет. Объявления
-  посторонних устройств попадают в UI только при таком явном поиске, не при recovery.
-- Каждый новый connection attempt получает отдельный central identity; поколения и
-  идентичность delegate защищают от запоздалых callbacks после A → B → A / stop.
-- При потере Bluetooth/разрешения после активного мониторинга — одна попытка блокировки
-  с причиной. Первоначальная недоступность — видимая ошибка, не lock loop: включите
-  Bluetooth и явно нажмите «Возобновить». Одного изменения availability недостаточно.
-  До первого ответа контроллера старт ждёт состояния; это не считается отказом.
-- Сон и подтверждённая блокировка прекращают радио. Возобновление — только при
-  подтверждённом разблокированном активном сеансе. Wake очищает старые данные и даёт
-  **15 с** на первое измерение, повторные события не продлевают срок. Такой же период
-  действует при включении, смене основного, unlock, resume, завершении паузы/калибровки.
-  После первого принятого RSSI сразу действуют обычные настроенные сроки.
-- Пауза **15/30/60 мин** сохраняется через сон/блокировку. Для сроков используется
-  монотонное `mach_continuous_time`, включающее сон; календарное время только для истории.
-- Ошибка lock / отсутствие подтверждения останавливает автоматические попытки до
-  явного «Возобновить». История отличает попытку от последней подтверждённой блокировки.
+- Defaults: threshold **−75 dBm**, weak signal **5 s**, no fresh signal **15 s**. Ranges: −100…−30 dBm, 1…60 s, 5…300 s. Invalid or nonnumeric values are not applied.
+- Average of the five most recent still-fresh RSSI measurements; returning from “far” requires threshold + **5 dB**. Starting a connection or receiving an advertisement does not count as fresh presence.
+- RSSI is requested only from a connected peripheral, about every **2 s**, with one request in flight. An error does not refresh the signal; a stalled request is limited to 5 s.
+- After disconnection, one immediate known-UUID / `retrievePeripherals` attempt lasting up to **5 s**; then general scanning for **5 s**, followed by a **25 s** pause. The API's scan filter takes a **service UUID**, not a peripheral UUID, so a nil scan is used and unrelated advertisements are ignored locally. Early known-connect failure opens scanning; failed scan-target connection or a rapidly dropped recovered connection gets a 25-second cooldown, without spinning. General scanning stops automatically on connection. Explicit user scanning can temporarily run while connected; scans never run in parallel. Unrelated device advertisements enter the UI only during explicit scanning, not recovery.
+- Each new connection attempt has a separate central identity; generation and delegate identity guard against late callbacks after A → B → A / stop.
+- Losing Bluetooth or permission after active monitoring triggers one lock attempt with a reason. Initial unavailability is a visible error, not a lock loop: turn Bluetooth on and explicitly click “Возобновить” (Resume). An availability change alone is insufficient. Before the controller's first response, startup waits for state and does not treat this as a refusal.
+- Sleep and confirmed locking stop the radio. Resume happens only in a confirmed unlocked active session. Wake clears old data and gives **15 s** for the first measurement; repeated events do not extend the deadline. The same period applies on enable, primary-device change, unlock, resume, and completion of pause/calibration. After the first accepted RSSI, normal configured deadlines apply immediately.
+- A **15/30/60 min** pause persists through sleep/lock. Deadlines use monotonic `mach_continuous_time`, which includes sleep; calendar time is used only for history.
+- A lock error or missing confirmation stops automatic retries until explicit “Возобновить” (Resume). History distinguishes an attempt from the most recent confirmed lock.
 
-## Калибровка
+## Calibration
 
-Подключите основное устройство и включите мониторинг. Во время двух этапов калибровки
-блокировка по RSSI/свежести временно подавлена (потеря Bluetooth/разрешения всё равно
-инициирует блокировку). За столом соберите **20** измерений, затем перейдите туда, где
-хотите блокировку, и нажмите «2. Вдали»: ещё **20**, максимум **90 с** на каждый этап.
+Connect the primary device and enable monitoring. During both calibration stages, RSSI/freshness-based locking is temporarily suppressed (loss of Bluetooth/permission still initiates a lock). Collect **20** measurements at the desk, move to where you want locking to happen, then click “2. Вдали” (2. Away): another **20**, with up to **90 s** per stage.
 
-Сравниваются 20-й percentile «за столом» и 80-й «вдали» с линейной интерполяцией.
-Разница меньше **10 dB** — надёжная граница не найдена. Иначе предлагается середина;
-порог вне разрешённого диапазона отклоняется, не clamp. Он применяется **только кнопкой**.
-Отмена, смена основного/настроек, disconnect, Bluetooth error, сон, lock или пауза
-прекращают сбор, не меняя ранее применённый порог.
+The 20th percentile “at desk” and 80th percentile “away” are compared using linear interpolation. A difference below **10 dB** means no reliable boundary was found. Otherwise the midpoint is suggested; a threshold outside the allowed range is rejected, not clamped. It is applied **only by pressing the button**. Cancel, primary-device/settings changes, disconnect, Bluetooth error, sleep, lock, or pause stop collection without changing the previously applied threshold.
 
-Положение руки, тело, стены и помехи меняют RSSI. Это **не точные метры**, не проверка
-ношения часов и не криптографическая аутентификация. UUID может измениться, cached
-retrieve может вернуть пустой список; надёжность Apple Watch требует аппаратной проверки.
+Arm position, body, walls, and interference affect RSSI. It is **not a precise distance in meters**, watch-wearing detection, or cryptographic authentication. A UUID may change and cached retrieval may return an empty list; Apple Watch reliability needs hardware verification.
 
-## Закрытый API и ограничения
+## Private API and limitations
 
-`ScreenLockAdapter.swift` — единственное место `SACLockScreenImmediate`, динамического
-`login.framework`, private lock flag и notification names. ABI `int(void)` взят из
-выбранного upstream; Apple его не гарантирует. Недоступный символ/ненулевой возврат —
-ошибка. Нулевой возврат без подтверждения locked за **3 с** тоже ошибка. Нет fallback
-на заставку, сон дисплея или клавиатурные события.
+`ScreenLockAdapter.swift` is the sole location of `SACLockScreenImmediate`, dynamic `login.framework` loading, the private lock flag, and notification names. The `int(void)` ABI comes from the selected upstream and is not guaranteed by Apple. Missing symbol/nonzero return is an error. A zero return without confirmed locked state within **3 s** is also an error. There is no screensaver, display-sleep, or keyboard-event fallback.
 
-`CGSessionCopyCurrentDictionary` должен вернуть словарь. Явный private lock flag `1`
-подтверждает блокировку; явный `0` допускает мониторинг только при on-console=1 и
-login-done=1. Если private flag **отсутствует**, оба этих признака в активном сеансе
-также допускают мониторинг, но **не подтверждают успешную блокировку**. Некорректный
-присутствующий flag, неполный/неактивный сеанс и nil-словарь остаются **unknown**.
-Ранняя терминальная проба в sandbox вернула nil; отдельная read-only проба без sandbox
-на этом Mac вернула словарь с обоими признаками `1`, но без private flag. Обе пробы —
-**не GUI-тест приложения**. Поиск вручную перепроверяет сеанс перед запуском, чтобы
-не зависеть от устаревшего состояния при старте.
-Пока мониторинг включён и Mac не спит, уже существующий таймер раз в секунду
-перечитывает состояние сеанса — в том числе после подтверждённой блокировки. Это
-позволяет заметить последующую разблокировку без private notification; при locked
-или unknown радио не запускается. «Возобновить» и открытие настроек также перечитывают
-сеанс перед использованием состояния. Ошибка блокировки не сбрасывается таким опросом:
-для продолжения после неё по-прежнему требуется явное «Возобновить».
-Private API/flags могут измениться в любой версии macOS. Совместимость с 14+ и штатным
-Apple Watch Auto Unlock **не подтверждена реальным тестом**.
+`CGSessionCopyCurrentDictionary` must return a dictionary. Explicit private lock flag `1` confirms locking; explicit `0` allows monitoring only with on-console=1 and login-done=1. If the private flag is **absent**, both indicators in an active session also allow monitoring, but **do not confirm successful locking**. A malformed present flag, incomplete/inactive session, or nil dictionary remains **unknown**. An early terminal probe in a sandbox returned nil; a separate read-only unsandboxed probe on this Mac returned a dictionary with both indicators `1`, but no private flag. Neither probe was a **GUI app test**. Manual scanning rereads the session before starting rather than relying on stale startup state.
 
-Официальные ограничения API: [scanForPeripherals](https://developer.apple.com/documentation/corebluetooth/cbcentralmanager/scanforperipherals(withservices:options:)),
-[retrievePeripherals](https://developer.apple.com/documentation/corebluetooth/cbcentralmanager/retrieveperipherals(withidentifiers:)),
-[readRSSI](https://developer.apple.com/documentation/corebluetooth/cbperipheral/readrssi()),
-[SMAppService](https://developer.apple.com/documentation/servicemanagement/smappservice).
+While monitoring is enabled and the Mac is awake, the existing timer rereads session state once per second, including after confirmed locking. This detects a later unlock without a private notification; radio does not start while locked or unknown. “Возобновить” (Resume) and opening settings also reread the session before using its state. This poll does not clear a lock fault: explicit Resume is still required after one.
 
-Статический аудитор проверяет перечисленные source/symbol/metadata правила, **не доказывает
-отсутствие любой возможной сети или корректность аппаратуры**. Скрипт сборки
-не устанавливает приложение в Applications и не меняет разрешения или настройки macOS.
+Private APIs/flags may change in any macOS release. Compatibility with 14+ and built-in Apple Watch Auto Unlock **has not been verified by a real test**.
+
+Official API limitations: [scanForPeripherals](https://developer.apple.com/documentation/corebluetooth/cbcentralmanager/scanforperipherals(withservices:options:)), [retrievePeripherals](https://developer.apple.com/documentation/corebluetooth/cbcentralmanager/retrieveperipherals(withidentifiers:)), [readRSSI](https://developer.apple.com/documentation/corebluetooth/cbperipheral/readrssi()), [SMAppService](https://developer.apple.com/documentation/servicemanagement/smappservice).
+
+The static auditor checks the listed source/symbol/metadata rules; it **does not prove the absence of every possible network path or correct hardware behavior**. The build script does not install the app in Applications or change macOS permissions or settings.
