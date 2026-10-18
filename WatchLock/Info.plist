@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleDevelopmentRegion</key><string>ru</string>
+<key>CFBundleExecutable</key><string>WatchLock</string>
+<key>CFBundleIdentifier</key><string>local.shatravkada.WatchLock</string>
+<key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
+<key>CFBundleName</key><string>WatchLock</string>
+<key>CFBundleIconFile</key><string>AppIcon.icns</string>
+<key>CFBundlePackageType</key><string>APPL</string>
+<key>CFBundleShortVersionString</key><string>0.1.0</string>
+<key>CFBundleVersion</key><string>1</string>
+<key>LSMinimumSystemVersion</key><string>14.0</string>
+<key>LSUIElement</key><true/>
+<key>LSApplicationCategoryType</key><string>public.app-category.utilities</string>
+<key>NSPrincipalClass</key><string>NSApplication</string>
+<key>NSBluetoothAlwaysUsageDescription</key><string>WatchLock использует Bluetooth для поиска выбранного устройства и блокировки Mac при потере его сигнала. Данные остаются на этом Mac.</string>
+<key>NSHumanReadableCopyright</key><string>BLEUnlock © 2019–2022 Takeshi Sone; WatchLock © 2026 contributors. MIT.</string>
+</dict></plist>

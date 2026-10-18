@@ -1,0 +1,7 @@
+WatchLock is a lock-only fork of BLEUnlock by Takeshi Sone (2019-2022), MIT.
+Source: https://github.com/ts1/BLEUnlock
+Base: tag 1.12.2, c33a132f9b65ecd8fd55954a5e097a77b86c8a92.
+The menu-bar AppKit/CoreBluetooth approach is retained; security-sensitive
+implementations are replaced. Native SF Symbols are provided by macOS.
+Upstream custom image assets are removed from the final application/tree;
+the upstream Git history retains its original image/Apache-2.0 credits.
